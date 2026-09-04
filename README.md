@@ -22,3 +22,5 @@ then open `http://localhost:8000/`.
 ## Credit
 
 Heavily inspired by [scoringtrainer.konbamwa.net](https://scoringtrainer.konbamwa.net/).
+
+Tile artwork from [FluffyStuff/riichi-mahjong-tiles](https://github.com/FluffyStuff/riichi-mahjong-tiles), released under CC0 (public domain).
