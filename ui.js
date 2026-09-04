@@ -875,6 +875,7 @@ function backToPractice(){
 }
 function renderMistakesList(){
   const listEl = document.getElementById('mistakesList');
+  document.getElementById('replayMistakesBtn').style.display = state.mistakes.length ? '' : 'none';
   if(!state.mistakes.length){
     listEl.innerHTML = '<p class="empty-note">No mistakes yet — nice work! Any hand you score wrong will show up here so you can come back to it.</p>';
     return;
