@@ -42,8 +42,9 @@ function saveStats(){
 }
 function uid(){ return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8); }
 function updateMistakesBadge(){
-  const btn = document.getElementById('btnMistakes');
-  if(btn) btn.textContent = `Mistakes (${state.mistakes.length})`;
+  document.querySelectorAll('.nav-mistakes-btn').forEach(btn=>{
+    btn.textContent = `Mistakes (${state.mistakes.length})`;
+  });
 }
 function addMistake(cur){
   state.mistakes.push({

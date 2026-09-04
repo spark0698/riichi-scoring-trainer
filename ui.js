@@ -715,6 +715,7 @@ function openRulesOverlay(){
 }
 
 document.getElementById('btnHome').addEventListener('click', ()=>{ closeMenu(); renderRoute('/'); });
+document.getElementById('btnHomeTop').addEventListener('click', ()=>{ closeMenu(); renderRoute('/'); });
 document.getElementById('btnRules').addEventListener('click', ()=>{ closeMenu(); openRulesOverlay(); });
 document.getElementById('btnYakuRef').addEventListener('click', ()=>{ closeMenu(); openOverlay(yakuRefHTML()); });
 document.getElementById('btnFuRef').addEventListener('click', ()=>{ closeMenu(); openOverlay(fuRefHTML()); });
@@ -859,6 +860,7 @@ function showFlashcardsView(){
   renderFlashcard();
 }
 document.getElementById('btnFlashcards').addEventListener('click', ()=>{ closeMenu(); renderRoute('/flashcards'); });
+document.getElementById('btnFlashcardsTop').addEventListener('click', ()=>{ closeMenu(); renderRoute('/flashcards'); });
 document.getElementById('flashcardBox').addEventListener('click', flipFlashcard);
 document.getElementById('flashFlipBtn').addEventListener('click', flipFlashcard);
 document.getElementById('flashNextBtn').addEventListener('click', nextFlashcard);
@@ -940,6 +942,7 @@ function nextReplayHand(){
   renderHandCard();
 }
 document.getElementById('btnMistakes').addEventListener('click', ()=>{ closeMenu(); renderRoute('/review'); });
+document.getElementById('btnMistakesTop').addEventListener('click', ()=>{ closeMenu(); renderRoute('/review'); });
 document.getElementById('backToPracticeBtn').addEventListener('click', ()=> renderRoute('/'));
 document.getElementById('replayMistakesBtn').addEventListener('click', startReplay);
 document.getElementById('exitReplayBtn').addEventListener('click', stopReplay);
@@ -965,7 +968,9 @@ function renderRoute(path, opts){
   if(opts.pushHistory !== false && location.pathname !== path){
     history.pushState(null, '', path);
   }
-  document.getElementById('btnHome').style.display = path === '/' ? 'none' : '';
+  document.querySelectorAll('.nav-home-btn').forEach(btn=>{
+    btn.style.display = path === '/' ? 'none' : '';
+  });
 }
 window.addEventListener('popstate', ()=> renderRoute(location.pathname, {pushHistory:false}));
 
