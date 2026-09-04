@@ -48,7 +48,26 @@ html{
   cursor:pointer;
 }
 .masthead .sub{font-size:.85rem; color:var(--gold-soft); margin-top:2px;}
-.masthead-right{position:relative; margin-left:auto;}
+.masthead-right{position:relative; margin-left:auto; display:flex; align-items:center; gap:10px;}
+.top-nav{display:none; gap:8px;}
+.top-nav-btn{
+  background:var(--green);
+  border:1.5px solid var(--gold-soft);
+  color:var(--paper);
+  padding:8px 14px;
+  border-radius:4px;
+  font-size:.88rem;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+  font-family:'Zen Kaku Gothic New', sans-serif;
+  transition:background .15s, border-color .15s, color .15s;
+}
+.top-nav-btn:hover{background:#4d8264; border-color:var(--gold); color:var(--gold-soft);}
+@media (min-width:700px){
+  .top-nav{display:flex;}
+  #menuNavGroup{display:none;}
+}
 .masthead-bottom-row{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:22px;}
 .streak{
   font-family:'Shippori Mincho', serif;
@@ -62,8 +81,8 @@ html{
 .hamburger-btn{
   width:42px; height:42px;
   border-radius:4px;
-  border:1px solid var(--line);
-  background:rgba(241,232,214,0.04);
+  border:1.5px solid var(--gold-soft);
+  background:var(--green);
   color:var(--paper);
   font-size:1.2rem;
   cursor:pointer;
@@ -71,7 +90,7 @@ html{
   flex-shrink:0;
   transition:background .15s, border-color .15s;
 }
-.hamburger-btn:hover{border-color:var(--gold-soft); color:var(--gold-soft);}
+.hamburger-btn:hover{background:#4d8264; border-color:var(--gold); color:var(--gold-soft);}
 .hamburger-btn.active{background:var(--gold); border-color:var(--gold); color:var(--felt-2);}
 
 .menu-panel{
