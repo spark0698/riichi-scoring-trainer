@@ -1,0 +1,14 @@
+{
+  "name": "Riichi Scoring Trainer",
+  "short_name": "Riichi Trainer",
+  "description": "Practice riichi mahjong hand scoring: read the hand, name the han, count the fu, call the score.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0d1e19",
+  "theme_color": "#132922",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
