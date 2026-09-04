@@ -418,12 +418,17 @@ table.breakdown tr.total td{font-weight:700; border-top:2px solid var(--ink); bo
   display:inline-block; background:var(--red); color:var(--paper);
   padding:2px 10px; border-radius:2px; font-size:.75rem; margin-left:8px; vertical-align:middle;
 }
+.result-actions{display:flex; align-items:center; gap:10px; margin-top:16px; flex-wrap:wrap;}
 .next-btn{
-  margin-top:16px;
   background:var(--red); color:var(--paper); border:none;
   padding:11px 24px; border-radius:4px; font-weight:700; cursor:pointer; font-size:.92rem;
 }
 .next-btn:hover{background:var(--red-soft);}
+.mistakes-nav-btn{
+  background:var(--green); color:var(--paper); border:none;
+  padding:11px 24px; border-radius:4px; font-weight:700; cursor:pointer; font-size:.92rem;
+}
+.mistakes-nav-btn:hover{background:#4d8264;}
 
 .hint{font-size:.8rem; color:var(--gold-soft); margin-top:2px;}
 .empty-note{font-size:.85rem; color:var(--ink-soft); text-align:center; padding:30px 10px;}

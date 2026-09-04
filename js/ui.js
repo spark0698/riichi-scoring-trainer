@@ -442,10 +442,14 @@ function renderResults(verdicts){
   box.innerHTML = `
     ${verdictHTML}
     ${buildYakuFuScoreHTML(cur)}
-    <button class="next-btn" id="nextBtn">${state.replay ? 'Next mistake' : 'Deal next hand'}</button>
+    <div class="result-actions">
+      <button class="next-btn" id="nextBtn">${state.replay ? 'Next mistake' : 'Deal next hand'}</button>
+      <button class="mistakes-nav-btn nav-mistakes-btn" id="goToMistakesBtn">Mistakes (${state.mistakes.length})</button>
+    </div>
   `;
   box.classList.add('show');
   document.getElementById('nextBtn').addEventListener('click', state.replay ? nextReplayHand : dealHand);
+  document.getElementById('goToMistakesBtn').addEventListener('click', ()=> renderRoute('/review'));
   if(typeof box.scrollIntoView === 'function'){
     try{ box.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(e){}
   }
