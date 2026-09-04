@@ -799,7 +799,14 @@ const FLASHCARD_TERMS = [
   {cat:'End states', term:'Tobi', kana:'飛び', en:"Busting \u2014 a player's score drops below zero, sometimes ending the game immediately."},
 ];
 
-let flashcardDeck = shuffle(FLASHCARD_TERMS.map((_,i)=>i));
+const FLASHCARD_CATEGORIES = [...new Set(FLASHCARD_TERMS.map(t=>t.cat))];
+state.flashcardCategories = new Set(FLASHCARD_CATEGORIES); // which categories to draw from; starts as all of them
+
+function filteredFlashcardIndices(){
+  return FLASHCARD_TERMS.map((_,i)=>i).filter(i=>state.flashcardCategories.has(FLASHCARD_TERMS[i].cat));
+}
+
+let flashcardDeck = shuffle(filteredFlashcardIndices());
 let flashcardIdx = 0;
 let flashcardFlipped = false;
 
@@ -837,10 +844,44 @@ function prevFlashcard(){
   renderFlashcard();
 }
 function shuffleFlashcards(){
-  flashcardDeck = shuffle(FLASHCARD_TERMS.map((_,i)=>i));
+  flashcardDeck = shuffle(filteredFlashcardIndices());
   flashcardIdx = 0;
   flashcardFlipped = false;
   renderFlashcard();
+}
+function updateFlashcardCategoriesBadge(){
+  const btn = document.getElementById('flashCategoriesBtn');
+  if(btn) btn.textContent = `Categories (${state.flashcardCategories.size}/${FLASHCARD_CATEGORIES.length})`;
+}
+function flashcardCategoriesHTML(){
+  let html = `<h2>Choose categories</h2><div class="overlay-sub">Pick which term categories to draw flashcards from.</div>`;
+  html += `<div class="rules-block">
+    <div class="chip-row" id="flashcardCatChips">
+      ${FLASHCARD_CATEGORIES.map(c=>`<div class="chip ${state.flashcardCategories.has(c)?'active':''}" data-cat="${c}">${c}</div>`).join('')}
+    </div>
+  </div>`;
+  html += `<button class="confirm-btn" id="confirmFlashcardCatsBtn">Confirm</button>`;
+  return html;
+}
+function openFlashcardCategoriesOverlay(){
+  openOverlay(flashcardCategoriesHTML());
+  document.getElementById('flashcardCatChips').addEventListener('click', (e)=>{
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    const cat = chip.dataset.cat;
+    const willActivate = !chip.classList.contains('active');
+    if(!willActivate && state.flashcardCategories.size<=1) return; // keep at least one selected
+    if(willActivate) state.flashcardCategories.add(cat); else state.flashcardCategories.delete(cat);
+    chip.classList.toggle('active', willActivate);
+  });
+  document.getElementById('confirmFlashcardCatsBtn').addEventListener('click', ()=>{
+    closeOverlay();
+    updateFlashcardCategoriesBadge();
+    flashcardDeck = shuffle(filteredFlashcardIndices());
+    flashcardIdx = 0;
+    flashcardFlipped = false;
+    renderFlashcard();
+  });
 }
 // The four top-level views (practice, replay, mistakes, flashcards) are
 // mutually exclusive. Every function that shows one starts by hiding all of
@@ -865,6 +906,7 @@ document.getElementById('flashcardBox').addEventListener('click', flipFlashcard)
 document.getElementById('flashFlipBtn').addEventListener('click', flipFlashcard);
 document.getElementById('flashNextBtn').addEventListener('click', nextFlashcard);
 document.getElementById('flashPrevBtn').addEventListener('click', prevFlashcard);
+document.getElementById('flashCategoriesBtn').addEventListener('click', openFlashcardCategoriesOverlay);
 document.getElementById('flashShuffleBtn').addEventListener('click', shuffleFlashcards);
 document.getElementById('backFromFlashcardsBtn').addEventListener('click', ()=> renderRoute('/'));
 
@@ -948,6 +990,7 @@ document.getElementById('replayMistakesBtn').addEventListener('click', startRepl
 document.getElementById('exitReplayBtn').addEventListener('click', stopReplay);
 document.getElementById('titleHome').addEventListener('click', ()=> renderRoute('/'));
 updateMistakesBadge();
+updateFlashcardCategoriesBadge();
 document.getElementById('scoreCorrect').textContent = state.stats.correct;
 document.getElementById('scoreTotal').textContent = state.stats.total;
 
