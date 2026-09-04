@@ -1,4 +1,3 @@
-<style>
 @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Noto+Serif+JP:wght@700&display=swap');
 
 :root{
@@ -503,4 +502,3 @@ table.breakdown tr.total td{font-weight:700; border-top:2px solid var(--ink); bo
   .tile.sideways{ width:53px; height:40px; }
   .tile.sideways svg{ width:40px; height:53px; }
 }
-</style>
