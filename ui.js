@@ -842,19 +842,13 @@ function showFlashcardsView(){
   document.getElementById('flashcardsView').style.display = 'block';
   renderFlashcard();
 }
-function backFromFlashcards(){
-  document.getElementById('flashcardsView').style.display = 'none';
-  document.getElementById('practiceBar').style.display = 'flex';
-  document.getElementById('handCard').style.display = '';
-  dealHand();
-}
-document.getElementById('btnFlashcards').addEventListener('click', ()=>{ closeMenu(); showFlashcardsView(); });
+document.getElementById('btnFlashcards').addEventListener('click', ()=>{ closeMenu(); renderRoute('/flashcards'); });
 document.getElementById('flashcardBox').addEventListener('click', flipFlashcard);
 document.getElementById('flashFlipBtn').addEventListener('click', flipFlashcard);
 document.getElementById('flashNextBtn').addEventListener('click', nextFlashcard);
 document.getElementById('flashPrevBtn').addEventListener('click', prevFlashcard);
 document.getElementById('flashShuffleBtn').addEventListener('click', shuffleFlashcards);
-document.getElementById('backFromFlashcardsBtn').addEventListener('click', backFromFlashcards);
+document.getElementById('backFromFlashcardsBtn').addEventListener('click', ()=> renderRoute('/'));
 
 /* ---- mistakes review & replay ---- */
 function showMistakesView(){
@@ -935,21 +929,36 @@ function nextReplayHand(){
   state.current = {hand: entry.hand, info: entry.info, ...entry.derived, answered:false, replayId:id};
   renderHandCard();
 }
-document.getElementById('btnMistakes').addEventListener('click', ()=>{ closeMenu(); showMistakesView(); });
-document.getElementById('backToPracticeBtn').addEventListener('click', backToPractice);
+document.getElementById('btnMistakes').addEventListener('click', ()=>{ closeMenu(); renderRoute('/review'); });
+document.getElementById('backToPracticeBtn').addEventListener('click', ()=> renderRoute('/'));
 document.getElementById('replayMistakesBtn').addEventListener('click', startReplay);
 document.getElementById('exitReplayBtn').addEventListener('click', stopReplay);
-document.getElementById('titleHome').addEventListener('click', ()=>{
-  // Clicking the title always gets you back to a fresh hand on the main
-  // page, whichever view you're currently in (mistakes list or replay).
-  state.replay = null;
-  backToPractice();
-});
+document.getElementById('titleHome').addEventListener('click', ()=> renderRoute('/'));
 updateMistakesBadge();
 document.getElementById('scoreCorrect').textContent = state.stats.correct;
 document.getElementById('scoreTotal').textContent = state.stats.total;
 
+/* ---- routing: /, /flashcards, /review each map to a real URL ---- */
+// Clicking the title, or landing on "/", always resets any in-progress
+// replay and gets you back to a fresh hand on the main page.
+function renderRoute(path, opts){
+  opts = opts || {};
+  if(path === '/flashcards'){
+    showFlashcardsView();
+  } else if(path === '/review'){
+    showMistakesView();
+  } else {
+    path = '/';
+    state.replay = null;
+    backToPractice();
+  }
+  if(opts.pushHistory !== false && location.pathname !== path){
+    history.pushState(null, '', path);
+  }
+}
+window.addEventListener('popstate', ()=> renderRoute(location.pathname, {pushHistory:false}));
+
 window.state = state; // exposed for debugging
-// deal the first hand on load
-dealHand();
+// render whichever page the URL points to on load
+renderRoute(location.pathname, {pushHistory:false});
 
