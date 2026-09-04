@@ -1,5 +1,12 @@
 'use strict';
 document.getElementById('dealBtn').addEventListener('click', dealHand);
+const scrollTopBtn = document.getElementById('scrollTopBtn');
+scrollTopBtn.addEventListener('click', ()=>{
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+document.addEventListener('scroll', ()=>{
+  scrollTopBtn.classList.toggle('visible', window.scrollY > 0);
+});
 
 /* ---- hamburger menu ---- */
 const menuBtn = document.getElementById('menuBtn');

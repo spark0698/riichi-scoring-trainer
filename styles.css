@@ -397,6 +397,35 @@ table.breakdown tr.total td{font-weight:700; border-top:2px solid var(--ink); bo
 .hint{font-size:.8rem; color:var(--gold-soft); margin-top:2px;}
 .empty-note{font-size:.85rem; color:var(--ink-soft); text-align:center; padding:30px 10px;}
 
+/* scroll-to-top button */
+.scroll-top-btn{
+  position:fixed;
+  right:28px; bottom:28px;
+  width:44px; height:44px;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--green);
+  border:1px solid var(--line);
+  border-radius:8px;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,0.35);
+  z-index:50;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .15s;
+}
+.scroll-top-btn.visible{
+  opacity:1;
+  pointer-events:auto;
+}
+.scroll-top-btn::before{
+  content:'';
+  width:9px; height:9px;
+  border-top:2px solid var(--paper);
+  border-right:2px solid var(--paper);
+  transform:translateY(2px) rotate(-45deg);
+}
+.scroll-top-btn:hover{background:#4d8264;}
+
 /* reference overlay */
 .overlay-backdrop{
   position:fixed; inset:0;
