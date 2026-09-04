@@ -2,22 +2,22 @@
 // Bump this whenever the precached file list changes, so the activate
 // handler below cleans out the old cache instead of leaving stale entries
 // alongside the new ones.
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `riichi-trainer-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
   '/',
   '/styles.css',
-  '/tile-data.js',
-  '/utils.js',
-  '/tile-graphics.js',
-  '/hand-builder.js',
-  '/scoring.js',
-  '/state.js',
-  '/ui.js',
+  '/js/tile-data.js',
+  '/js/utils.js',
+  '/js/tile-graphics.js',
+  '/js/hand-builder.js',
+  '/js/scoring.js',
+  '/js/state.js',
+  '/js/ui.js',
   '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
 ];
 
 self.addEventListener('install', (event) => {
