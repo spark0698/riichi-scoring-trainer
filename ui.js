@@ -707,6 +707,7 @@ function openRulesOverlay(){
   });
 }
 
+document.getElementById('btnHome').addEventListener('click', ()=>{ closeMenu(); renderRoute('/'); });
 document.getElementById('btnRules').addEventListener('click', ()=>{ closeMenu(); openRulesOverlay(); });
 document.getElementById('btnYakuRef').addEventListener('click', ()=>{ closeMenu(); openOverlay(yakuRefHTML()); });
 document.getElementById('btnFuRef').addEventListener('click', ()=>{ closeMenu(); openOverlay(fuRefHTML()); });
@@ -833,12 +834,20 @@ function shuffleFlashcards(){
   flashcardFlipped = false;
   renderFlashcard();
 }
-function showFlashcardsView(){
+// The four top-level views (practice, replay, mistakes, flashcards) are
+// mutually exclusive. Every function that shows one starts by hiding all of
+// them, so adding a new view or editing one of these functions can't leave
+// two views visible at once.
+function hideAllViews(){
   document.getElementById('practiceBar').style.display = 'none';
   document.getElementById('replayBar').style.display = 'none';
   document.getElementById('handCard').style.display = 'none';
   document.getElementById('resultCard').classList.remove('show');
   document.getElementById('mistakesView').style.display = 'none';
+  document.getElementById('flashcardsView').style.display = 'none';
+}
+function showFlashcardsView(){
+  hideAllViews();
   document.getElementById('flashcardsView').style.display = 'block';
   renderFlashcard();
 }
@@ -852,17 +861,12 @@ document.getElementById('backFromFlashcardsBtn').addEventListener('click', ()=> 
 
 /* ---- mistakes review & replay ---- */
 function showMistakesView(){
-  document.getElementById('practiceBar').style.display = 'none';
-  document.getElementById('replayBar').style.display = 'none';
-  document.getElementById('handCard').style.display = 'none';
-  document.getElementById('resultCard').classList.remove('show');
+  hideAllViews();
   document.getElementById('mistakesView').style.display = 'block';
   renderMistakesList();
 }
 function backToPractice(){
-  document.getElementById('mistakesView').style.display = 'none';
-  document.getElementById('flashcardsView').style.display = 'none';
-  document.getElementById('replayBar').style.display = 'none';
+  hideAllViews();
   document.getElementById('practiceBar').style.display = 'flex';
   document.getElementById('handCard').style.display = '';
   dealHand();
@@ -904,8 +908,7 @@ function renderMistakesList(){
 function startReplay(){
   if(!state.mistakes.length) return;
   state.replay = {queue: shuffle(state.mistakes.map(m=>m.id))};
-  document.getElementById('mistakesView').style.display = 'none';
-  document.getElementById('practiceBar').style.display = 'none';
+  hideAllViews();
   document.getElementById('replayBar').style.display = 'flex';
   document.getElementById('handCard').style.display = '';
   nextReplayHand();
@@ -955,6 +958,7 @@ function renderRoute(path, opts){
   if(opts.pushHistory !== false && location.pathname !== path){
     history.pushState(null, '', path);
   }
+  document.getElementById('btnHome').style.display = path === '/' ? 'none' : '';
 }
 window.addEventListener('popstate', ()=> renderRoute(location.pathname, {pushHistory:false}));
 
