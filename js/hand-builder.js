@@ -241,8 +241,12 @@ function tryBuildShousangenGroups(){
   const [tripA, tripB, pairNum] = dragons;
   addCount(counts,'z',tripA,3); groups.push({kind:'trip', suit:'z', num:tripA});
   addCount(counts,'z',tripB,3); groups.push({kind:'trip', suit:'z', num:tripB});
-  if(!fillRandomGroups(counts, groups, 2)) return null;
+  // Reserve the third dragon's pair before filling the remaining groups —
+  // otherwise the random filler could independently claim a third triplet
+  // of that same dragon (nothing yet marks it as spoken for), and the
+  // unconditional addCount below would then push it to 5 physical copies.
   addCount(counts,'z',pairNum,2);
+  if(!fillRandomGroups(counts, groups, 2)) return null;
   const pair = {suit:'z', num:pairNum};
   return {groups, pair};
 }
@@ -589,8 +593,11 @@ function tryBuildShousuushiGroups(){
   addCount(counts,'z',w1,3); groups.push({kind:'trip', suit:'z', num:w1});
   addCount(counts,'z',w2,3); groups.push({kind:'trip', suit:'z', num:w2});
   addCount(counts,'z',w3,3); groups.push({kind:'trip', suit:'z', num:w3});
-  if(!fillRandomGroups(counts, groups, 1)) return null;
+  // Reserve the fourth wind's pair before filling the last group — same
+  // reasoning as Shousangen above: otherwise the random filler could claim
+  // a third triplet of that wind before the pair reservation runs.
   addCount(counts,'z',pairWind,2);
+  if(!fillRandomGroups(counts, groups, 1)) return null;
   return {groups, pair:{suit:'z', num:pairWind}};
 }
 
@@ -711,28 +718,32 @@ function randomFullTile(){
   const num = suit==='z' ? randInt(1,7) : randInt(1,9);
   return {suit, num};
 }
-function tileKey(t){ return t.suit+'-'+t.num; }
-// Every physical tile exists in exactly 4 copies — including a red five,
-// which is still just one of that suit's four 5's, not a 5th tile. A kan
-// uses all 4 copies of one value, so if the hand has one, zero copies of
-// that value are left anywhere else in the game — meaning no dora, kan
-// dora, or ura dora indicator can ever legally show it.
-function maxedOutTileKeys(allTiles){
+function tileCounts(tiles){
   const counts = newCounts();
-  allTiles.forEach(t=> counts[t.suit][t.num]++);
-  const maxed = new Set();
-  ['m','p','s','z'].forEach(suit=>{
-    const maxN = suit==='z' ? 7 : 9;
-    for(let n=1;n<=maxN;n++){ if(counts[suit][n]>=4) maxed.add(suit+'-'+n); }
-  });
-  return maxed;
+  tiles.forEach(t=> addCount(counts, t.suit, t.num, 1));
+  return counts;
 }
-function pickIndicatorTile(excludedKeys){
+// Every physical tile exists in exactly 4 copies — including a red five,
+// which is still just one of that suit's four 5's, not a 5th tile. `counts`
+// tracks every tile already committed to this deal (the hand itself, plus
+// any indicator already picked this call or by an earlier one — kan dora
+// and kan ura dora indicators draw from the same finite dead wall as the
+// first dora indicator, so they all have to share one running tally, not
+// each be checked only against the hand). Picking an indicator mutates
+// `counts` so the next pick sees it as spoken for.
+function pickIndicatorTile(counts){
   for(let attempt=0; attempt<50; attempt++){
     const t = randomFullTile();
-    if(!excludedKeys.has(tileKey(t))) return t;
+    if(canAdd(counts, t.suit, t.num, 1)){ addCount(counts, t.suit, t.num, 1); return t; }
   }
-  return randomFullTile(); // 34 possible values, so running out is not realistically reachable
+  // Fallback: scan for any tile type with room left. Guarantees termination
+  // — a 14-tile hand plus a handful of indicators can't plausibly max out
+  // all 34 tile types at once.
+  for(const suit of ['m','p','s','z']){
+    const maxN = suit==='z' ? 7 : 9;
+    for(let n=1;n<=maxN;n++){ if(canAdd(counts, suit, n, 1)){ addCount(counts, suit, n, 1); return {suit,num:n}; } }
+  }
+  return randomFullTile(); // unreachable in practice
 }
 function doraTileFromIndicator(t){
   if(t.suit==='z'){
@@ -753,22 +764,27 @@ function doraTileFromIndicator(t){
 // first built — at which point only the ura half needs generating; the
 // dora indicators shouldn't be re-rolled.
 function computeDoraIndicators(allTiles, kanCount){
-  const excluded = maxedOutTileKeys(allTiles);
+  const counts = tileCounts(allTiles);
   const doraIndicators = [];
   let doraInHand = 0;
   for(let i=0; i<1+kanCount; i++){
-    const ind = pickIndicatorTile(excluded);
+    const ind = pickIndicatorTile(counts);
     doraIndicators.push(ind);
     doraInHand += countTileInList(allTiles, doraTileFromIndicator(ind));
   }
   return {doraIndicators, doraInHand};
 }
-function computeUraIndicators(allTiles, kanCount){
-  const excluded = maxedOutTileKeys(allTiles);
+// `existingIndicators` are tiles already committed to the dora side of this
+// same deal (passed in whenever ura indicators are rolled after the dora
+// indicators already exist) — they share the same finite dead wall, so ura
+// picks have to see them as taken too, not just the hand's own tiles.
+function computeUraIndicators(allTiles, kanCount, existingIndicators){
+  const counts = tileCounts(allTiles);
+  (existingIndicators||[]).forEach(t=> addCount(counts, t.suit, t.num, 1));
   const uraIndicators = [];
   let uraDoraInHand = 0;
   for(let i=0; i<1+kanCount; i++){
-    const ind = pickIndicatorTile(excluded);
+    const ind = pickIndicatorTile(counts);
     uraIndicators.push(ind);
     uraDoraInHand += countTileInList(allTiles, doraTileFromIndicator(ind));
   }
@@ -776,7 +792,7 @@ function computeUraIndicators(allTiles, kanCount){
 }
 function computeDoraInfo(allTiles, riichi, kanCount){
   const {doraIndicators, doraInHand} = computeDoraIndicators(allTiles, kanCount);
-  const {uraIndicators, uraDoraInHand} = riichi ? computeUraIndicators(allTiles, kanCount) : {uraIndicators:[], uraDoraInHand:0};
+  const {uraIndicators, uraDoraInHand} = riichi ? computeUraIndicators(allTiles, kanCount, doraIndicators) : {uraIndicators:[], uraDoraInHand:0};
   return {doraIndicators, uraIndicators, doraInHand, uraDoraInHand};
 }
 function getAllHandTiles(hand){
@@ -794,16 +810,29 @@ function getAllHandTiles(hand){
 function countTileInList(tiles, t){
   return tiles.filter(x=>x.suit===t.suit && x.num===t.num).length;
 }
-// Decide which suits get a "red five" in play, tied to fives actually present
-// in the hand (there is only one red 5 per suit in a physical set - 3 plain
-// copies plus 1 red). If a hand uses all 4 copies of a suit's 5, the red one
-// is physically guaranteed to be among them, not just a 40% chance.
-function pickRedFiveSuits(allTiles){
+// Decide which suits get a "red five" *in the hand*, tied to fives actually
+// present (there is only one red 5 per suit in a physical set - 3 plain
+// copies plus 1 red). A suit's dora/ura indicators draw 5's from that same
+// finite set of 4, so they count against it too: if the hand's own copies
+// plus its indicators' copies of a suit's 5 add up to all 4 physical tiles,
+// one of those four is definitely red - not necessarily one of the hand's
+// own, though, since it could just as easily be sitting on an indicator
+// instead (which earns no aka dora bonus). Below 4, some copies could still
+// be off in the live wall or another player's hand, so it stays a heuristic
+// 40% chance for those.
+function pickRedFiveSuits(allTiles, doraIndicators, uraIndicators){
   const suits=[];
   ['m','p','s'].forEach(suit=>{
-    const count5 = allTiles.filter(t=>t.suit===suit && t.num===5).length;
-    if(count5===0) return;
-    if(count5>=4 || Math.random()<0.4) suits.push(suit);
+    const handCount = allTiles.filter(t=>t.suit===suit && t.num===5).length;
+    if(handCount===0) return;
+    const indicatorCount = (doraIndicators||[]).filter(t=>t.suit===suit && t.num===5).length
+      + (uraIndicators||[]).filter(t=>t.suit===suit && t.num===5).length;
+    const totalDemand = handCount + indicatorCount;
+    if(totalDemand>=4){
+      if(Math.random() < handCount/totalDemand) suits.push(suit);
+    } else if(Math.random()<0.4){
+      suits.push(suit);
+    }
   });
   return suits;
 }
@@ -1013,7 +1042,7 @@ function buildHand(){
   const allTiles = getAllHandTiles(handSoFar);
   const kanCount = groups.filter(g=>g.kind==='kan').length;
   const {doraIndicators, uraIndicators, doraInHand, uraDoraInHand} = computeDoraInfo(allTiles, riichi, kanCount);
-  const redFiveSuits = pickRedFiveSuits(allTiles);
+  const redFiveSuits = pickRedFiveSuits(allTiles, doraIndicators, uraIndicators);
 
   return {
     groups, pair, groupConcealed, concealed,
@@ -1042,7 +1071,7 @@ function buildChiitoiHand(){
 
   const doraInfo = computeDoraInfo(picks.flatMap(p=>[p,p]), riichi, 0);
   const allTiles = picks.flatMap(p=>[p,p]);
-  const redFiveSuits = pickRedFiveSuits(allTiles);
+  const redFiveSuits = pickRedFiveSuits(allTiles, doraInfo.doraIndicators, doraInfo.uraIndicators);
 
   return {
     isChiitoi:true, pairs: picks, winningPairIdx,
@@ -1226,6 +1255,55 @@ function findBestDecomposition(hand){
   return best ? best.hand : hand;
 }
 
+// A chiitoitsu-shaped hand (7 distinct pairs) occasionally also admits a
+// valid standard 4-groups+pair reading of the exact same 14 tiles (always
+// via sequences, since no tile type has more than 2 copies in a chiitoi
+// hand, ruling out triplets/kans) — e.g. two duplicated runs reading as
+// Ryanpeikou instead of Chiitoitsu. Real rules score whichever valid
+// interpretation is worth more, so check for a higher-scoring standard
+// reading the same way findBestDecomposition() does for structural
+// ambiguity within an already-standard hand, and fall back to the
+// chiitoitsu reading if no standard decomposition scores higher (or none
+// exists, or none has a yaku of its own to legally win with).
+function resolveChiitoiOrStandard(chiitoiHand){
+  const chiitoiInfo = detectYakuChiitoi(chiitoiHand);
+  const chiitoiHanFromYaku = chiitoiInfo.yaku.reduce((a,y)=>a+y.han,0);
+  const chiitoiHanTotal = chiitoiHanFromYaku + chiitoiHand.doraInHand + chiitoiHand.redFiveCount + chiitoiHand.uraDoraInHand;
+  let best = {rank:[0, chiitoiHanTotal, computeFuChiitoi()], hand:chiitoiHand, info:chiitoiInfo};
+
+  const winTile = chiitoiHand.pairs[chiitoiHand.winningPairIdx];
+  const allTiles = chiitoiHand.pairs.flatMap(p=>[p,p]);
+  decomposeStandardHand(allTiles, 4).forEach(({groups, pair})=>{
+    winSlotCandidatesFor(groups, pair, 0, winTile).forEach(slot=>{
+      const candidateHand = {
+        groups, pair,
+        groupConcealed: groups.map(()=>true),
+        concealed: true,
+        roundWind: chiitoiHand.roundWind, seatWind: chiitoiHand.seatWind,
+        winMethod: chiitoiHand.winMethod,
+        winSlot: {groupIdx: slot.groupIdx, tile: winTile, waitType: slot.waitType},
+        riichi: chiitoiHand.riichi, doubleRiichi: chiitoiHand.doubleRiichi, ippatsu: chiitoiHand.ippatsu,
+        haitei: chiitoiHand.haitei, houtei: chiitoiHand.houtei, rinshan:false, chankan:false,
+        doraIndicators: chiitoiHand.doraIndicators, uraIndicators: chiitoiHand.uraIndicators,
+        doraInHand: chiitoiHand.doraInHand, redFiveCount: chiitoiHand.redFiveCount, uraDoraInHand: chiitoiHand.uraDoraInHand,
+        redFiveSuits: chiitoiHand.redFiveSuits,
+      };
+      const candInfo = detectYaku(candidateHand);
+      const candHanFromYaku = candInfo.yaku.reduce((a,y)=>a+y.han,0);
+      const yakumanMult = candInfo.yakuman.reduce((a,y)=>a+y.mult,0);
+      if(candHanFromYaku===0 && yakumanMult===0) return; // no yaku under this reading -> not a legal win
+      const candHanTotal = candHanFromYaku + chiitoiHand.doraInHand + chiitoiHand.redFiveCount + chiitoiHand.uraDoraInHand;
+      const fuRes = computeFu(candidateHand, candInfo);
+      const rank = [yakumanMult, candHanTotal, fuRes.fu];
+      const better = rank[0]!==best.rank[0] ? rank[0]>best.rank[0]
+        : rank[1]!==best.rank[1] ? rank[1]>best.rank[1]
+        : rank[2]>best.rank[2];
+      if(better) best = {rank, hand:candidateHand, info:candInfo};
+    });
+  });
+  return {hand:best.hand, info:best.info};
+}
+
 function generateValidHand(){
   if(Math.random()<0.00054){
     const hand = buildKokushiHand();
@@ -1234,8 +1312,7 @@ function generateValidHand(){
   }
   if(Math.random()<0.022){
     const hand = buildChiitoiHand();
-    const info = detectYakuChiitoi(hand);
-    return {hand, info};
+    return resolveChiitoiOrStandard(hand);
   }
   for(let attempt=0; attempt<40; attempt++){
     let hand = buildHand();
@@ -1250,7 +1327,7 @@ function generateValidHand(){
       // Riichi wasn't set when buildHand() first rolled ura indicators, so
       // there weren't any yet — generate them now that riichi applies.
       const kanCount = hand.groups.filter(g=>g.kind==='kan').length;
-      const {uraIndicators, uraDoraInHand} = computeUraIndicators(getAllHandTiles(hand), kanCount);
+      const {uraIndicators, uraDoraInHand} = computeUraIndicators(getAllHandTiles(hand), kanCount, hand.doraIndicators);
       hand.uraIndicators = uraIndicators;
       hand.uraDoraInHand = uraDoraInHand;
       info = detectYaku(hand);
@@ -1265,7 +1342,7 @@ function generateValidHand(){
   if(hand.concealed && !hand.riichi){
     hand.riichi = true;
     const kanCount = hand.groups.filter(g=>g.kind==='kan').length;
-    const {uraIndicators, uraDoraInHand} = computeUraIndicators(getAllHandTiles(hand), kanCount);
+    const {uraIndicators, uraDoraInHand} = computeUraIndicators(getAllHandTiles(hand), kanCount, hand.doraIndicators);
     hand.uraIndicators = uraIndicators;
     hand.uraDoraInHand = uraDoraInHand;
   }
