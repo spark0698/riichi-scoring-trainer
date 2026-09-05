@@ -810,16 +810,29 @@ function getAllHandTiles(hand){
 function countTileInList(tiles, t){
   return tiles.filter(x=>x.suit===t.suit && x.num===t.num).length;
 }
-// Decide which suits get a "red five" in play, tied to fives actually present
-// in the hand (there is only one red 5 per suit in a physical set - 3 plain
-// copies plus 1 red). If a hand uses all 4 copies of a suit's 5, the red one
-// is physically guaranteed to be among them, not just a 40% chance.
-function pickRedFiveSuits(allTiles){
+// Decide which suits get a "red five" *in the hand*, tied to fives actually
+// present (there is only one red 5 per suit in a physical set - 3 plain
+// copies plus 1 red). A suit's dora/ura indicators draw 5's from that same
+// finite set of 4, so they count against it too: if the hand's own copies
+// plus its indicators' copies of a suit's 5 add up to all 4 physical tiles,
+// one of those four is definitely red - not necessarily one of the hand's
+// own, though, since it could just as easily be sitting on an indicator
+// instead (which earns no aka dora bonus). Below 4, some copies could still
+// be off in the live wall or another player's hand, so it stays a heuristic
+// 40% chance for those.
+function pickRedFiveSuits(allTiles, doraIndicators, uraIndicators){
   const suits=[];
   ['m','p','s'].forEach(suit=>{
-    const count5 = allTiles.filter(t=>t.suit===suit && t.num===5).length;
-    if(count5===0) return;
-    if(count5>=4 || Math.random()<0.4) suits.push(suit);
+    const handCount = allTiles.filter(t=>t.suit===suit && t.num===5).length;
+    if(handCount===0) return;
+    const indicatorCount = (doraIndicators||[]).filter(t=>t.suit===suit && t.num===5).length
+      + (uraIndicators||[]).filter(t=>t.suit===suit && t.num===5).length;
+    const totalDemand = handCount + indicatorCount;
+    if(totalDemand>=4){
+      if(Math.random() < handCount/totalDemand) suits.push(suit);
+    } else if(Math.random()<0.4){
+      suits.push(suit);
+    }
   });
   return suits;
 }
@@ -1029,7 +1042,7 @@ function buildHand(){
   const allTiles = getAllHandTiles(handSoFar);
   const kanCount = groups.filter(g=>g.kind==='kan').length;
   const {doraIndicators, uraIndicators, doraInHand, uraDoraInHand} = computeDoraInfo(allTiles, riichi, kanCount);
-  const redFiveSuits = pickRedFiveSuits(allTiles);
+  const redFiveSuits = pickRedFiveSuits(allTiles, doraIndicators, uraIndicators);
 
   return {
     groups, pair, groupConcealed, concealed,
@@ -1058,7 +1071,7 @@ function buildChiitoiHand(){
 
   const doraInfo = computeDoraInfo(picks.flatMap(p=>[p,p]), riichi, 0);
   const allTiles = picks.flatMap(p=>[p,p]);
-  const redFiveSuits = pickRedFiveSuits(allTiles);
+  const redFiveSuits = pickRedFiveSuits(allTiles, doraInfo.doraIndicators, doraInfo.uraIndicators);
 
   return {
     isChiitoi:true, pairs: picks, winningPairIdx,
