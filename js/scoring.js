@@ -128,21 +128,24 @@ function detectYaku(hand){
   // rather than a raw pairwise scan, so three copies of the same sequence
   // (which can arise from the baseline random builder, not just the
   // dedicated Iipeiko builder) score as exactly one Iipeiko instead of two.
-  // The specific case of two DISTINCT duplicated-sequence pairs using all
-  // four groups is Ryanpeikou (3 han, closed only) — a single yaku that
-  // replaces what would otherwise be two separate Iipeiko, not five han.
+  // Ryanpeikou (3 han, closed only) is "two duplicated-sequence pairs using
+  // all four groups" - that's usually two DISTINCT sequences each appearing
+  // twice, but it's just as legitimately one sequence appearing FOUR times
+  // (which splits into two pairs of duplicates all the same). Counting the
+  // total number of duplicate pairs across every distinct sequence, rather
+  // than requiring exactly two distinct keys, covers both shapes.
   if(concealed){
     const seqKeyCounts = {};
     seqGroups.forEach(g=>{
       const key = g.suit+'-'+g.start;
       seqKeyCounts[key] = (seqKeyCounts[key]||0) + 1;
     });
-    const pairKeys = Object.entries(seqKeyCounts).filter(([k,c])=>c>=2);
     const allGroupsAreSeq = groups.length>0 && groups.every(g=>g.kind==='seq');
-    if(allGroupsAreSeq && pairKeys.length===2 && pairKeys[0][1]===2 && pairKeys[1][1]===2){
+    const totalDuplicatePairs = Object.values(seqKeyCounts).reduce((a,c)=>a+Math.floor(c/2),0);
+    if(allGroupsAreSeq && totalDuplicatePairs===2){
       yaku.push({name:'Ryanpeikou', han:3});
     } else {
-      pairKeys.forEach(([k,count])=>{
+      Object.entries(seqKeyCounts).forEach(([k,count])=>{
         const pairs = Math.floor(count/2);
         for(let k2=0;k2<pairs;k2++) yaku.push({name:'Iipeiko', han:1});
       });
