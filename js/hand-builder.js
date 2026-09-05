@@ -1286,6 +1286,7 @@ function resolveChiitoiOrStandard(chiitoiHand){
         haitei: chiitoiHand.haitei, houtei: chiitoiHand.houtei, rinshan:false, chankan:false,
         doraIndicators: chiitoiHand.doraIndicators, uraIndicators: chiitoiHand.uraIndicators,
         doraInHand: chiitoiHand.doraInHand, redFiveCount: chiitoiHand.redFiveCount, uraDoraInHand: chiitoiHand.uraDoraInHand,
+        redFiveSuits: chiitoiHand.redFiveSuits,
       };
       const candInfo = detectYaku(candidateHand);
       const candHanFromYaku = candInfo.yaku.reduce((a,y)=>a+y.han,0);
