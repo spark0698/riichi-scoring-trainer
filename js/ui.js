@@ -521,8 +521,8 @@ function yakuRefHTML(){
       ['Chinroutou','Hand made entirely of terminals (1s and 9s), no honors'],
       ['Ryuuiisou','All green tiles — 2/3/4/6/8 sou and green dragon only'],
       ['Suukantsu','All four groups are kans'],
-      ['Chuuren Poutou','1112345678999 in one suit, plus any matching tile of that suit to win — win on 1 or 9'],
-      ['Junsei Chuuren Poutou','Same shape, but winning on 2-8 (counts double)'],
+      ['Chuuren Poutou','1112345678999 in one suit, plus any matching tile of that suit to win'],
+      ['Junsei Chuuren Poutou','Same shape, but the hand was already tenpai on all 9 tiles of that suit before winning (counts double)'],
       ['Kokushi Musou','One of each terminal/honor tile, plus a pair of one of them — closed hand only'],
     ]],
   ];
