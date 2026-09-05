@@ -795,12 +795,15 @@ function countTileInList(tiles, t){
   return tiles.filter(x=>x.suit===t.suit && x.num===t.num).length;
 }
 // Decide which suits get a "red five" in play, tied to fives actually present
-// in the hand (there is only one red 5 per suit in a physical set).
+// in the hand (there is only one red 5 per suit in a physical set - 3 plain
+// copies plus 1 red). If a hand uses all 4 copies of a suit's 5, the red one
+// is physically guaranteed to be among them, not just a 40% chance.
 function pickRedFiveSuits(allTiles){
   const suits=[];
   ['m','p','s'].forEach(suit=>{
-    const has5 = allTiles.some(t=>t.suit===suit && t.num===5);
-    if(has5 && Math.random()<0.4) suits.push(suit);
+    const count5 = allTiles.filter(t=>t.suit===suit && t.num===5).length;
+    if(count5===0) return;
+    if(count5>=4 || Math.random()<0.4) suits.push(suit);
   });
   return suits;
 }
