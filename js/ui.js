@@ -1090,3 +1090,46 @@ window.state = state; // exposed for debugging
 // render whichever page the URL points to on load
 renderRoute(location.pathname, {pushHistory:false});
 
+// WebKit bug workaround: on iOS, `position:sticky` on the mobile context bar
+// silently stops sticking (behaves as if it were static) during the on-
+// screen keyboard's scroll-into-view and during elastic overscroll/rubber-
+// banding at the top of the page. Confirmed via on-device testing: the
+// bar's rect.top in that state exactly matches its unstuck static
+// position - sticky just isn't engaging at all.
+// First attempt compared rect.top against visualViewport.offsetTop, on the
+// assumption getBoundingClientRect() stays layout-viewport-relative while
+// the keyboard is up. On-device testing showed the bar overshot downward by
+// exactly offsetTop's own value - i.e. rect.top was already visual-viewport-
+// relative in that state (a separate, known WebKit quirk), so subtracting
+// offsetTop again double-counted it. Simply keeping rect.top itself clamped
+// to >=0 is both correct and simpler: no visualViewport involved at all.
+// Computed fresh every frame so it self-corrects the instant the desync
+// starts or ends, without touching the page's normal scroll model (a full
+// nested-scroll-container rewrite was tried before and reverted - see
+// scoring-audit notes - this is deliberately much smaller in scope).
+// Also caps the push at the card's own bottom edge, same as native sticky
+// would - otherwise the bar stays pinned even once the card (e.g. its
+// answer breakdown, which extends the card well past one screen) has
+// scrolled far enough that the bar should release and scroll away with it.
+{
+  let lastTranslate = 0;
+  function correctStickyContextBar(){
+    if(matchMedia('(max-width:700px)').matches){
+      const bar = document.querySelector('#handCard .context-bar');
+      const card = document.getElementById('handCard');
+      if(bar && card){
+        const barRect = bar.getBoundingClientRect();
+        const naturalTop = barRect.top - lastTranslate;
+        const cardBottom = card.getBoundingClientRect().bottom;
+        const translate = Math.max(0, Math.min(-naturalTop, cardBottom - barRect.height - naturalTop));
+        if(translate !== lastTranslate){
+          bar.style.transform = translate > 0 ? `translateY(${translate}px)` : '';
+          lastTranslate = translate;
+        }
+      }
+    }
+    requestAnimationFrame(correctStickyContextBar);
+  }
+  requestAnimationFrame(correctStickyContextBar);
+}
+

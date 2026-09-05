@@ -428,6 +428,14 @@ html{
     box-shadow:0 4px 8px -4px rgba(0,0,0,0.25);
   }
 }
+@media (max-width:700px) and (display-mode:standalone){
+  /* Installed as a Home Screen PWA, there's no browser chrome above the
+     page - top:0 sits right under an iOS Dynamic Island. A regular Safari
+     tab doesn't need this: its own toolbar already keeps content clear. */
+  .context-bar{
+    top:env(safe-area-inset-top, 0px);
+  }
+}
 .verdicts{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;}
 .verdict{
   flex:1; min-width:130px;
