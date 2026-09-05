@@ -43,9 +43,10 @@ function detectYaku(hand){
   }) && !isTerminalOrHonor(pair.suit,pair.num);
   if(noTerminalHonor) yaku.push({name:'Tanyao', han:1});
 
-  // Yakuhai
+  // Yakuhai - a kan is just an upgraded triplet and counts the same as one
+  // here, same as everywhere else in this file that checks trip/kan groups.
   groups.forEach((g)=>{
-    if(g.kind==='trip' && g.suit==='z'){
+    if((g.kind==='trip'||g.kind==='kan') && g.suit==='z'){
       if(g.num>=5) yaku.push({name:DRAGON_NAMES[g.num], han:1});
       if(g.num===roundWind) yaku.push({name:'Round Wind ('+WIND_NAMES[roundWind]+')', han:1});
       if(g.num===seatWind) yaku.push({name:'Seat Wind ('+WIND_NAMES[seatWind]+')', han:1});
