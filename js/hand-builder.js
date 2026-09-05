@@ -1174,7 +1174,14 @@ function findBestDecomposition(hand){
   concealedTiles.push({suit:hand.pair.suit,num:hand.pair.num});
 
   const decomps = decomposeStandardHand(concealedTiles, reDecomposableGroups.length);
-  if(decomps.length<=1) return hand;
+  if(decomps.length===0) return hand;
+  // Even a single structural grouping of the tiles can admit more than one
+  // valid *win-completion* reading — e.g. a winning tile that could equally
+  // complete either of two sequences (one via ryanmen, one via kanchan)
+  // using the exact same final groups, which changes Pinfu eligibility and
+  // the fu total without changing what the groups themselves are. So the
+  // winSlot-candidate search below always runs, even when decomps.length
+  // is exactly 1 - there used to be an early return here that skipped it.
 
   const winTile = hand.winSlot.tile;
   let best=null;
@@ -1195,8 +1202,21 @@ function findBestDecomposition(hand){
       const fuRes = computeFu(candidateHand, info);
       const isDealer = candidateHand.seatWind===1;
       const score = computeScore(yakumanMult>0?13:hanTotal, fuRes.fu, isDealer, candidateHand.winMethod, yakumanMult, true);
-      if(!best || score.total>best.total){
-        best = {total:score.total, hand:candidateHand};
+      // Rank by (yakumanMult, hanTotal, fu) rather than by score.total: once
+      // two readings are both within the same scoring tier (e.g. 6 han and
+      // 7 han both cap at Haneman), their final points are identical, which
+      // would otherwise hide the objectively higher-scoring reading behind
+      // a tie and leave the wrong yaku/fu reported even though it doesn't
+      // change the points.
+      const rank = [yakumanMult, hanTotal, fuRes.fu];
+      let better = !best;
+      if(best){
+        if(rank[0]!==best.rank[0]) better = rank[0]>best.rank[0];
+        else if(rank[1]!==best.rank[1]) better = rank[1]>best.rank[1];
+        else better = rank[2]>best.rank[2];
+      }
+      if(better){
+        best = {rank, total:score.total, hand:candidateHand};
       }
     });
   });
