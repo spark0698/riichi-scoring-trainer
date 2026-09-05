@@ -258,6 +258,15 @@ function computeFu(hand, yakuInfo){
   if(isPinfu && winMethod==='tsumo'){
     fu=20;
     details.push({label:'Pinfu + Tsumo override', value:'fixed at 20'});
+  } else if(!concealed && base===20){
+    // "Kuipinfu": an open hand with the pinfu shape (all sequences, no fu
+    // from the wait, no yakuhai pair) can't score pinfu itself since it's
+    // open, and with no other fu source it would sit at exactly 20 - but a
+    // hand can never actually score 20 fu unless it's the closed-pinfu-tsumo
+    // case above, so this gets bumped to 30 instead of the usual round-up
+    // (which would leave it unchanged, since 20 is already a multiple of 10).
+    fu=30;
+    details.push({label:'Open hand, no other fu', value:'30 (kuipinfu)'});
   } else {
     fu = Math.ceil(base/10)*10;
     if(fu>base) details.push({label:'Round up to nearest 10', value:`${base} → ${fu}`});
