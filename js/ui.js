@@ -312,6 +312,15 @@ function renderAnswerForm(){
       e.stopPropagation();
     });
   });
+
+  // Auto-focus the first field so a keyboard-driven player can start typing
+  // the moment a hand is dealt - but only on a device that already has a
+  // physical keyboard. On a touch device with no fine pointer, focusing a
+  // number input pops up the on-screen keyboard unprompted, covering part
+  // of the page.
+  if(window.matchMedia('(pointer: fine)').matches && answerInputs.length){
+    answerInputs[0].focus();
+  }
 }
 
 function clearAnswerForm(){
