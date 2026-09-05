@@ -564,6 +564,7 @@ function fuRefHTML(){
   </tbody></table>`;
   html += `<div class="ref-note">
     <b>Shanpon exception:</b> if a shanpon wait is completed by ron, that particular triplet counts as <i>open</i> for fu purposes (and doesn't count toward Sanankou), even in an otherwise closed hand.<br><br>
+    <b>Kuipinfu:</b> an open hand with the Pinfu shape (all sequences, no fu-earning wait, non-yakuhai pair) doesn't get to claim Pinfu itself since it's open — but it can't land at exactly 20 fu either. That specific case is bumped to 30 fu instead of the usual round-up.<br><br>
     <b>Rounding:</b> add everything up, then round up to the next 10. Pinfu + tsumo is the one fixed case: always exactly 20 fu, no rounding.
   </div>`;
   return html;
