@@ -1111,6 +1111,11 @@ renderRoute(location.pathname, {pushHistory:false});
 // would - otherwise the bar stays pinned even once the card (e.g. its
 // answer breakdown, which extends the card well past one screen) has
 // scrolled far enough that the bar should release and scroll away with it.
+// Reads the bar's own computed `top` (rather than assuming 0) so it still
+// respects the installed-PWA safe-area-inset-top offset (env(), see
+// styles.css) that keeps it clear of an iOS Dynamic Island - otherwise this
+// correction would re-introduce that clipping the instant native sticky
+// disengages, since it'd pin the bar to the literal top of the screen.
 {
   let lastTranslate = 0;
   function correctStickyContextBar(){
@@ -1118,10 +1123,11 @@ renderRoute(location.pathname, {pushHistory:false});
       const bar = document.querySelector('#handCard .context-bar');
       const card = document.getElementById('handCard');
       if(bar && card){
+        const stickyTop = parseFloat(getComputedStyle(bar).top) || 0;
         const barRect = bar.getBoundingClientRect();
         const naturalTop = barRect.top - lastTranslate;
         const cardBottom = card.getBoundingClientRect().bottom;
-        const translate = Math.max(0, Math.min(-naturalTop, cardBottom - barRect.height - naturalTop));
+        const translate = Math.max(0, Math.min(stickyTop - naturalTop, cardBottom - barRect.height - naturalTop));
         if(translate !== lastTranslate){
           bar.style.transform = translate > 0 ? `translateY(${translate}px)` : '';
           lastTranslate = translate;
