@@ -285,10 +285,53 @@ function renderAnswerForm(){
   holder.innerHTML = formHTML;
   document.getElementById('submitBtn').addEventListener('click', submitAnswer);
   document.getElementById('clearBtn').addEventListener('click', clearAnswerForm);
-  document.querySelectorAll('#answerForm input').forEach(inp=>{
+  const answerInputs = document.querySelectorAll('#answerForm input');
+  answerInputs.forEach((inp, idx)=>{
     inp.value=''; // guard against browser autofill repopulating a freshly dealt hand
-    inp.addEventListener('keydown', (e)=>{ if(e.key==='Enter') submitAnswer(); });
+    inp.addEventListener('keydown', (e)=>{
+      // Answers here are always non-negative integers, so block every other
+      // character a number input would otherwise still accept (-, +, ., e/E
+      // for scientific notation) - typing e.g. "3e" reads back as an empty
+      // value once the field loses focus (invalid-number inputs report ""),
+      // silently turning a real answer into a blank one. Modifier
+      // combinations (copy/paste/select-all/etc.) and multi-character key
+      // names (Backspace, ArrowLeft, Enter, Tab, ...) are left alone.
+      if(!e.ctrlKey && !e.metaKey && !e.altKey && e.key.length===1 && !/[0-9]/.test(e.key)){
+        e.preventDefault();
+        return;
+      }
+      if(e.key!=='Enter') return;
+      e.preventDefault();
+      const next = answerInputs[idx+1];
+      if(next){
+        // Not the last field yet - just hop to the next one instead of
+        // submitting early.
+        next.focus();
+        e.stopPropagation();
+        return;
+      }
+      // Answering here is what makes the result card's "show" class appear,
+      // which the document-level Enter-deals-next-hand listener below checks
+      // for - without stopping propagation, that same keydown event would
+      // bubble up and see "show" already applied (submitAnswer runs
+      // synchronously), instantly dealing a new hand before the breakdown
+      // is ever visible. Once already answered, this Enter isn't the submit
+      // action anymore, so let it bubble through to deal the next hand
+      // instead (a focused input still fires its own keydown first).
+      if(state.current && state.current.answered) return;
+      submitAnswer();
+      e.stopPropagation();
+    });
   });
+
+  // Auto-focus the first field so a keyboard-driven player can start typing
+  // the moment a hand is dealt - but only on a device that already has a
+  // physical keyboard. On a touch device with no fine pointer, focusing a
+  // number input pops up the on-screen keyboard unprompted, covering part
+  // of the page.
+  if(window.matchMedia('(pointer: fine)').matches && answerInputs.length){
+    answerInputs[0].focus();
+  }
 }
 
 function clearAnswerForm(){
