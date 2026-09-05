@@ -336,6 +336,12 @@ html{
 .mistakes-header{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px;}
 .mistakes-header h2{margin:0;}
 .mistakes-actions{display:flex; gap:8px;}
+/* "Back" is really just "Home" - on desktop the top-nav already has a Home
+   button, so this would be redundant; only show it on mobile where page
+   navigation lives in the hamburger menu instead. */
+@media (min-width:700px){
+  .mobile-only-btn{display:none;}
+}
 .mistake-box{
   position:relative;
   border:1.5px solid rgba(90,81,69,0.3); border-radius:8px; padding:10px;
@@ -358,6 +364,7 @@ html{
 .mistake-delete-btn:hover{border-color:var(--red); color:var(--red);}
 
 /* flashcards */
+.flashcard-toolbar{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:14px;}
 .flashcard-progress{text-align:center; font-size:.85rem; color:var(--ink-soft); margin-bottom:10px;}
 .flashcard-box{
   min-height:220px;
@@ -411,12 +418,17 @@ table.breakdown tr.total td{font-weight:700; border-top:2px solid var(--ink); bo
   display:inline-block; background:var(--red); color:var(--paper);
   padding:2px 10px; border-radius:2px; font-size:.75rem; margin-left:8px; vertical-align:middle;
 }
+.result-actions{display:flex; align-items:center; gap:10px; margin-top:16px; flex-wrap:wrap;}
 .next-btn{
-  margin-top:16px;
   background:var(--red); color:var(--paper); border:none;
   padding:11px 24px; border-radius:4px; font-weight:700; cursor:pointer; font-size:.92rem;
 }
 .next-btn:hover{background:var(--red-soft);}
+.mistakes-nav-btn{
+  background:var(--green); color:var(--paper); border:none;
+  padding:11px 24px; border-radius:4px; font-weight:700; cursor:pointer; font-size:.92rem;
+}
+.mistakes-nav-btn:hover{background:#4d8264;}
 
 .hint{font-size:.8rem; color:var(--gold-soft); margin-top:2px;}
 .empty-note{font-size:.85rem; color:var(--ink-soft); text-align:center; padding:30px 10px;}

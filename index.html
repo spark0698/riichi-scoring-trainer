@@ -36,8 +36,8 @@
             <div class="menu-title">Navigation</div>
             <div class="menu-links">
               <button class="menu-link-btn nav-home-btn" id="btnHome" style="display:none">Home</button>
-              <button class="menu-link-btn" id="btnFlashcards">Japanese terms (flashcards)</button>
               <button class="menu-link-btn nav-mistakes-btn" id="btnMistakes">Mistakes (0)</button>
+              <button class="menu-link-btn" id="btnFlashcards">Japanese terms (flashcards)</button>
             </div>
           </div>
           <hr class="menu-divider">
@@ -83,7 +83,7 @@
       <h2>Mistakes</h2>
       <div class="mistakes-actions">
         <button class="deal-btn" id="replayMistakesBtn">Replay these</button>
-        <button class="clear-btn" id="backToPracticeBtn">Back</button>
+        <button class="clear-btn mobile-only-btn" id="backToPracticeBtn">Home</button>
       </div>
     </div>
     <div id="mistakesList"></div>
@@ -93,10 +93,12 @@
     <div class="mistakes-header">
       <h2>Japanese Terms</h2>
       <div class="mistakes-actions">
-        <button class="clear-btn" id="flashCategoriesBtn">Categories</button>
-        <button class="deal-btn" id="flashShuffleBtn">Shuffle</button>
-        <button class="clear-btn" id="backFromFlashcardsBtn">Back</button>
+        <button class="clear-btn mobile-only-btn" id="backFromFlashcardsBtn">Home</button>
       </div>
+    </div>
+    <div class="flashcard-toolbar">
+      <button class="clear-btn" id="flashCategoriesBtn">Categories</button>
+      <button class="deal-btn" id="flashShuffleBtn">Shuffle</button>
     </div>
     <div class="flashcard-progress" id="flashcardProgress"></div>
     <div class="flashcard-box" id="flashcardBox"></div>
