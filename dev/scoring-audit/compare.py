@@ -20,12 +20,9 @@ def group_tile_list(g):
 class Overflow(Exception):
     """Raised when a (suit, num) needs more than the 4 physical copies that
     exist in a real set, once hand tiles + dora indicators + ura indicators
-    are all counted together. This can legitimately happen since our
-    generator doesn't model a shared finite wall across the hand and its
-    indicators (e.g. the hand uses all 4 copies of a suit's 5, and a dora
-    indicator separately also happens to land on that suit's 5) - a genuine
-    representability gap in the reference library's tile encoding, not a bug
-    in either engine."""
+    are all counted together - the one case that's genuinely unrepresentable,
+    since a real set only has 4 physical copies of any tile and there's
+    nowhere left for a 5th to come from."""
     def __init__(self, suit, num, needed):
         self.suit = suit
         self.num = num
@@ -34,54 +31,70 @@ class Overflow(Exception):
 
 def allocate_ids(sections, red_suits):
     """sections: list of (name, list_of_{'suit','num'} dicts), in priority
-    order - hand tiles first, so a suit's red five (if any) is always
-    assigned to a physical tile that's actually IN the hand, never to a dora
-    or ura indicator (our engine never marks an indicator itself as red).
-    Returns {name: [136-id, ...]} parallel to each section's input list.
-    Raises Overflow if any (suit, num) needs more than 4 ids combined across
-    every section - the one case that's genuinely unrepresentable, since a
-    real set only has 4 physical copies of any tile.
+    order - hand tiles first. Returns {name: [136-id, ...]} parallel to each
+    section's input list. Raises Overflow if any (suit, num) needs more than
+    4 ids combined across every section.
+
+    The base id for any suit's 5 (SUIT_OFFSET+16, e.g. FIVE_RED_MAN=16) is
+    unconditionally "the red five" slot in this library's 136-id scheme -
+    not something a hand can opt out of. A hand tile can only carry that id
+    when our engine actually marked the suit red (redFiveSuits); handing it
+    to an unflagged hand tile would fabricate an aka dora bonus the hand
+    never earned. A dora/ura indicator, though, is never checked for aka at
+    all - its physical identity doesn't affect the score - so when a suit
+    isn't flagged red but hand+indicators still need all 4 physical copies,
+    the reserved id can safely go to an indicator instead of the hand. That
+    is, in fact, exactly what "not flagged red" already means for a hand
+    that doesn't hold all 4 copies itself: the one real red five just
+    happened to end up in the dead wall as an indicator rather than in hand.
     """
     combined_counts = collections.defaultdict(int)
-    for _, entries in sections:
+    hand_counts = collections.defaultdict(int)
+    for name, entries in sections:
         for e in entries:
-            combined_counts[(e['suit'], e['num'])] += 1
-    for (suit, num), cnt in combined_counts.items():
-        # The base id for any suit's 5 (SUIT_OFFSET+16, e.g. FIVE_RED_MAN=16)
-        # is unconditionally "the red five" slot in this library's 136-id
-        # scheme - it's not something we can opt out of per hand. A plain
-        # (non-red) 5 must land on one of the other 3 ids, so a suit not
-        # marked red can only ever supply 3 physical 5s' worth of ids, and a
-        # suit marked red can supply all 4 (1 red + 3 plain) - anything past
-        # that genuinely can't be encoded.
+            key = (e['suit'], e['num'])
+            combined_counts[key] += 1
+            if name == 'hand':
+                hand_counts[key] += 1
+    for key, cnt in combined_counts.items():
+        if cnt > 4:
+            raise Overflow(key[0], key[1], cnt)
+    for (suit, num), cnt in hand_counts.items():
         if suit in ('m', 'p', 's') and num == 5:
-            max_allowed = 4 if suit in red_suits else 3
-        else:
-            max_allowed = 4
-        if cnt > max_allowed:
-            raise Overflow(suit, num, cnt)
+            # The hand's own copies of a suit's 5 can only include the
+            # reserved id if that suit is flagged red - otherwise all of the
+            # hand's copies must come from the 3 plain slots. Our generator
+            # guarantees a suit is always flagged red once the hand ALONE
+            # holds all 4 copies (see pickRedFiveSuits), so hitting this
+            # would mean a genuine generator bug, not a harness gap.
+            max_hand = 4 if suit in red_suits else 3
+            if cnt > max_hand:
+                raise Overflow(suit, num, cnt)
 
-    plain_counts = collections.defaultdict(int)  # (suit,num) -> plain ids already handed out
-    red_assigned = {s: False for s in red_suits}
+    # Build a fixed 4-id pop order per (suit, 5): if the suit is flagged red,
+    # the reserved id comes first (sections are processed hand-first, so the
+    # hand's own first occurrence claims it, matching real aka placement);
+    # otherwise the reserved id is pushed to the back, reachable only by a
+    # 4th occurrence - which the hand_counts guard above already proved can
+    # never be a hand tile, so it can only land on a dora/ura indicator.
+    queues = {}
+    def queue_for(suit, num):
+        key = (suit, num)
+        if key not in queues:
+            base = SUIT_OFFSET[suit] + (num - 1) * 4
+            if suit in ('m', 'p', 's') and num == 5:
+                plain = [base + 1, base + 2, base + 3]
+                queues[key] = collections.deque(([base] + plain) if suit in red_suits else (plain + [base]))
+            else:
+                queues[key] = collections.deque([base, base + 1, base + 2, base + 3])
+        return queues[key]
+
     out = {}
     for name, entries in sections:
         ids = []
         for e in entries:
-            suit, num = e['suit'], e['num']
-            base = SUIT_OFFSET[suit] + (num - 1) * 4
-            if suit in ('m', 'p', 's') and num == 5:
-                if suit in red_suits and not red_assigned[suit]:
-                    red_assigned[suit] = True
-                    tid = base  # the one reserved red-five id (matches FIVE_RED_MAN/PIN/SOU)
-                else:
-                    idx = plain_counts[(suit, num)]
-                    plain_counts[(suit, num)] += 1
-                    tid = base + 1 + idx  # plain 5s occupy the other 3 slots - never the base id
-            else:
-                idx = plain_counts[(suit, num)]
-                plain_counts[(suit, num)] += 1
-                tid = base + idx
-            ids.append(tid)
+            q = queue_for(e['suit'], e['num'])
+            ids.append(q.popleft())
         out[name] = ids
     return out
 
