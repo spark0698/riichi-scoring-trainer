@@ -719,6 +719,27 @@ function openRulesOverlay(){
   });
 }
 
+function resetProgressConfirmHTML(){
+  return `<h2>Reset progress?</h2>
+    <div class="overlay-sub">This clears your correct/total streak and your entire mistake history. This can't be undone.</div>
+    <div class="reset-confirm-actions">
+      <button class="clear-btn" id="cancelResetBtn">Cancel</button>
+      <button class="danger-btn" id="confirmResetBtn">Reset progress</button>
+    </div>`;
+}
+function openResetProgressOverlay(){
+  openOverlay(resetProgressConfirmHTML());
+  document.getElementById('cancelResetBtn').addEventListener('click', closeOverlay);
+  document.getElementById('confirmResetBtn').addEventListener('click', ()=>{
+    resetProgress();
+    document.getElementById('scoreCorrect').textContent = state.stats.correct;
+    document.getElementById('scoreTotal').textContent = state.stats.total;
+    updateMistakesBadge();
+    closeOverlay();
+  });
+}
+document.getElementById('resetProgressBtn').addEventListener('click', openResetProgressOverlay);
+
 document.getElementById('btnHome').addEventListener('click', ()=>{ closeMenu(); renderRoute('/'); });
 document.getElementById('btnHomeTop').addEventListener('click', ()=>{ closeMenu(); renderRoute('/'); });
 document.getElementById('btnRules').addEventListener('click', ()=>{ closeMenu(); openRulesOverlay(); });

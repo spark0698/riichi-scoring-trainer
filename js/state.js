@@ -20,17 +20,17 @@ const state = {
 const MISTAKES_KEY = 'riichiTrainerMistakes';
 function loadMistakes(){
   try{
-    const raw = sessionStorage.getItem(MISTAKES_KEY);
+    const raw = localStorage.getItem(MISTAKES_KEY);
     state.mistakes = raw ? JSON.parse(raw) : [];
   }catch(e){ state.mistakes = []; }
 }
 function saveMistakes(){
-  try{ sessionStorage.setItem(MISTAKES_KEY, JSON.stringify(state.mistakes)); }catch(e){ /* storage unavailable (e.g. private browsing) — fail silently, session just won't persist across a refresh */ }
+  try{ localStorage.setItem(MISTAKES_KEY, JSON.stringify(state.mistakes)); }catch(e){ /* storage unavailable (e.g. private browsing) — fail silently, progress just won't persist */ }
 }
 const STATS_KEY = 'riichiTrainerStats';
 function loadStats(){
   try{
-    const raw = sessionStorage.getItem(STATS_KEY);
+    const raw = localStorage.getItem(STATS_KEY);
     const parsed = raw ? JSON.parse(raw) : null;
     if(parsed && typeof parsed.correct==='number' && typeof parsed.total==='number'){
       state.stats = parsed;
@@ -38,7 +38,18 @@ function loadStats(){
   }catch(e){ /* keep the default {correct:0, total:0} */ }
 }
 function saveStats(){
-  try{ sessionStorage.setItem(STATS_KEY, JSON.stringify(state.stats)); }catch(e){ /* storage unavailable — fail silently */ }
+  try{ localStorage.setItem(STATS_KEY, JSON.stringify(state.stats)); }catch(e){ /* storage unavailable — fail silently */ }
+}
+// Clears the stored progress keys directly (rather than saving an empty
+// state) so a manual reset can't be confused with "no progress recorded
+// yet" if storage inspection ever matters — and only these two keys, not
+// the whole origin's storage, in case something unrelated ever gets added
+// to localStorage later.
+function resetProgress(){
+  state.mistakes = [];
+  state.stats = {correct:0, total:0};
+  try{ localStorage.removeItem(MISTAKES_KEY); }catch(e){ /* storage unavailable — fail silently */ }
+  try{ localStorage.removeItem(STATS_KEY); }catch(e){ /* storage unavailable — fail silently */ }
 }
 function uid(){ return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8); }
 function updateMistakesBadge(){
