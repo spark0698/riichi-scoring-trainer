@@ -289,6 +289,17 @@ function renderAnswerForm(){
   answerInputs.forEach((inp, idx)=>{
     inp.value=''; // guard against browser autofill repopulating a freshly dealt hand
     inp.addEventListener('keydown', (e)=>{
+      // Answers here are always non-negative integers, so block every other
+      // character a number input would otherwise still accept (-, +, ., e/E
+      // for scientific notation) - typing e.g. "3e" reads back as an empty
+      // value once the field loses focus (invalid-number inputs report ""),
+      // silently turning a real answer into a blank one. Modifier
+      // combinations (copy/paste/select-all/etc.) and multi-character key
+      // names (Backspace, ArrowLeft, Enter, Tab, ...) are left alone.
+      if(!e.ctrlKey && !e.metaKey && !e.altKey && e.key.length===1 && !/[0-9]/.test(e.key)){
+        e.preventDefault();
+        return;
+      }
       if(e.key!=='Enter') return;
       e.preventDefault();
       const next = answerInputs[idx+1];
