@@ -180,8 +180,15 @@ function detectYaku(hand){
       if(!otherSuitsEmpty) continue;
       let sum=0; for(let n=1;n<=9;n++) sum+=rawCounts[suit][n];
       if(sum!==14) continue;
+      // The pre-win 13-tile hand is "pure" iff it was exactly the true
+      // 9-sided-wait shape (1,1,1,2,3,4,5,6,7,8,9,9,9) — equivalently, the
+      // single tile in excess of `required` (there's always exactly one,
+      // since the 14-tile hand has exactly one more tile than the 13-tile
+      // base shape) is the tile that completed the win.
       const winTile = winSlot.tile;
-      const isPure = winTile.suit===suit && winTile.num>=2 && winTile.num<=8;
+      let excessNum = null;
+      for(let n=1;n<=9;n++){ if(rawCounts[suit][n] > required[n-1]) excessNum = n; }
+      const isPure = winTile.suit===suit && winTile.num===excessNum;
       yakuman.push({name: isPure?'Junsei Chuuren Poutou':'Chuuren Poutou', mult: isPure?2:1});
     }
   }
