@@ -414,6 +414,19 @@ html{
   body{display:flex; flex-direction:column;}
   .wrap{flex:1; display:flex; flex-direction:column; width:100%;}
   .card.flashcards-view{margin-top:auto; margin-bottom:auto;}
+  /* Tapping an answer field brings up the on-screen keyboard, and the
+     browser scrolls the page to keep that field visible above it - which
+     can push the round/seat/win/riichi context bar at the top of the hand
+     card off-screen. Pin it to the top of the viewport instead of fighting
+     the browser's own scroll-into-view behavior, so it's still there
+     without having to scroll back up for it. */
+  .context-bar{
+    position:sticky;
+    top:0;
+    z-index:5;
+    background:var(--paper);
+    box-shadow:0 4px 8px -4px rgba(0,0,0,0.25);
+  }
 }
 .verdicts{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;}
 .verdict{
