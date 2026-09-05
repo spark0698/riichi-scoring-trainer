@@ -368,5 +368,12 @@ def main():
             print(json.dumps(ex['rec'], indent=2, default=str))
             print('---')
 
+    # Known wait-based yakuman-doubling variants are an accepted, deliberate
+    # gap (see README) and never fail the run. Everything else - a genuine
+    # mismatch, a conversion/library exception, or a hand our own generator
+    # produced that isn't even physically representable - is a real problem
+    # worth failing on, for a human or CI to look into.
+    return 1 if (mismatched or errors or unrepresentable) else 0
+
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

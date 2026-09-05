@@ -1,0 +1,58 @@
+name: Scoring engine audit
+
+# Runs whenever a change touches the scoring engine itself (the files
+# dev/scoring-audit/load-engine.js bundles) or the audit harness that tests
+# it, so a change to either side of that pair always gets checked together.
+on:
+  pull_request:
+    paths:
+      - 'js/tile-data.js'
+      - 'js/utils.js'
+      - 'js/hand-builder.js'
+      - 'js/scoring.js'
+      - 'dev/scoring-audit/**'
+      - '.github/workflows/scoring-audit.yml'
+  workflow_dispatch: {}
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install reference-library dependencies
+        working-directory: dev/scoring-audit
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Run hand-crafted regression suite
+        working-directory: dev/scoring-audit
+        run: node run.js
+
+      - name: Generate 100k random hands
+        working-directory: dev/scoring-audit
+        run: node generate.js 100000 .data/hands_ci.jsonl
+
+      - name: Cross-check against reference library
+        working-directory: dev/scoring-audit
+        run: |
+          source venv/bin/activate
+          python3 compare.py .data/hands_ci.jsonl .data/mismatches_ci.jsonl
+
+      - name: Upload mismatch detail on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scoring-audit-mismatches
+          path: dev/scoring-audit/.data/mismatches_ci.jsonl
