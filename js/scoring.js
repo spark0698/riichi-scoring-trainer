@@ -76,8 +76,12 @@ function detectYaku(hand){
     if(starts.includes(1)&&starts.includes(4)&&starts.includes(7)){ yaku.push({name:'Ittsuu', han:isOpen?1:2}); break; }
   }
 
-  // Chanta / Junchan
-  const allGroupsTerminalish = groups.every(g=>{
+  // Chanta / Junchan - requires at least one sequence group; an all-triplet
+  // hand (e.g. Honroutou) doesn't qualify even if every group is terminal/
+  // honor-ish, since Chanta/Junchan specifically means "every group contains
+  // a terminal, AND at least one of those groups is a 123/789 run."
+  const hasSeq = groups.some(g=>g.kind==='seq');
+  const allGroupsTerminalish = hasSeq && groups.every(g=>{
     if(g.kind==='seq') return g.start===1||g.start===7;
     return isTerminalOrHonor(g.suit,g.num);
   }) && isTerminalOrHonor(pair.suit,pair.num);
