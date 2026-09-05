@@ -285,10 +285,20 @@ function renderAnswerForm(){
   holder.innerHTML = formHTML;
   document.getElementById('submitBtn').addEventListener('click', submitAnswer);
   document.getElementById('clearBtn').addEventListener('click', clearAnswerForm);
-  document.querySelectorAll('#answerForm input').forEach(inp=>{
+  const answerInputs = document.querySelectorAll('#answerForm input');
+  answerInputs.forEach((inp, idx)=>{
     inp.value=''; // guard against browser autofill repopulating a freshly dealt hand
     inp.addEventListener('keydown', (e)=>{
       if(e.key!=='Enter') return;
+      e.preventDefault();
+      const next = answerInputs[idx+1];
+      if(next){
+        // Not the last field yet - just hop to the next one instead of
+        // submitting early.
+        next.focus();
+        e.stopPropagation();
+        return;
+      }
       // Answering here is what makes the result card's "show" class appear,
       // which the document-level Enter-deals-next-hand listener below checks
       // for - without stopping propagation, that same keydown event would
