@@ -287,7 +287,20 @@ function renderAnswerForm(){
   document.getElementById('clearBtn').addEventListener('click', clearAnswerForm);
   document.querySelectorAll('#answerForm input').forEach(inp=>{
     inp.value=''; // guard against browser autofill repopulating a freshly dealt hand
-    inp.addEventListener('keydown', (e)=>{ if(e.key==='Enter') submitAnswer(); });
+    inp.addEventListener('keydown', (e)=>{
+      if(e.key!=='Enter') return;
+      // Answering here is what makes the result card's "show" class appear,
+      // which the document-level Enter-deals-next-hand listener below checks
+      // for - without stopping propagation, that same keydown event would
+      // bubble up and see "show" already applied (submitAnswer runs
+      // synchronously), instantly dealing a new hand before the breakdown
+      // is ever visible. Once already answered, this Enter isn't the submit
+      // action anymore, so let it bubble through to deal the next hand
+      // instead (a focused input still fires its own keydown first).
+      if(state.current && state.current.answered) return;
+      submitAnswer();
+      e.stopPropagation();
+    });
   });
 }
 
