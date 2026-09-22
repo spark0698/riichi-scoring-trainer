@@ -534,6 +534,7 @@ function yakuRefHTML(){
       ['Houtei Raoyui','1 han — win by ron on the very last discard of the hand'],
       ['Rinshan Kaihou','1 han — win by drawing the replacement tile right after declaring a kan'],
       ['Chankan','1 han — win by ron on a tile another player added to upgrade a triplet into a kan'],
+      ['Iipeiko','1 han, closed only — two identical sequences'],
     ]],
     ['2 han', [
       ['Double Riichi','2 han — riichi declared on your first discard'],
@@ -545,15 +546,14 @@ function yakuRefHTML(){
       ['Honroutou','2 han — every group + the pair is a terminal or honor tile, no sequences at all'],
       ['Sankantsu','2 han — three kans, open or closed in any mix'],
       ['Chiitoitsu','2 han, fixed 25 fu — seven distinct pairs, closed hand only'],
+      ['Shousangen','2 han — two dragon triplets plus a pair of the third dragon'],
+      ['Sanshoku Doukou','2 han — the same triplet number in all three suits'],
     ]],
     ['3+ han', [
       ['Junchan','3 han closed / 2 han open — chanta shape, but terminals only, no honors'],
       ['Honitsu','3 han closed / 2 han open — one suit plus honors only'],
-      ['Iipeiko','1 han, closed only — two identical sequences'],
       ['Ryanpeikou','3 han, closed only — two separate pairs of identical sequences (replaces Iipeiko x2)'],
       ['Chinitsu','6 han closed / 5 han open — one suit only, no honors at all'],
-      ['Shousangen','2 han bonus — two dragon triplets plus a pair of the third dragon'],
-      ['Sanshoku Doukou','2 han — the same triplet number in all three suits'],
     ]],
     ['Yakuman (score independently)', [
       ['Suuankou','Four concealed triplets'],
